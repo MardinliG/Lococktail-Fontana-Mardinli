@@ -45,7 +45,7 @@ export default function Home() {
           <h1 className="text-3xl font-bold text-gray-900">Cocktails App</h1>
           <div>
             {user ? (
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-4 text-black">
                 <span>{user.email}</span>
                 <button 
                   onClick={handleSignOut}
@@ -63,7 +63,7 @@ export default function Home() {
         </div>
       </header>
       
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-4 py-8 text-black">
         {user ? (
           <>
             <AddCocktailForm onCocktailAdded={handleCocktailAdded} />
@@ -71,7 +71,7 @@ export default function Home() {
             <CocktailList key={refreshList ? 'refresh' : 'initial'} />
           </>
         ) : (
-          <div className="text-center py-12">
+          <div className="text-center py-12 text-black">
             <h2 className="text-2xl font-bold mb-4">Bienvenue sur Cocktails App</h2>
             <p className="mb-6">Connectez-vous pour voir et ajouter des cocktails</p>
             <Link href="/login" className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 text-lg">

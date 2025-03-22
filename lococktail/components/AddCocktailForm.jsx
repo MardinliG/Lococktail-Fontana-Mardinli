@@ -72,7 +72,7 @@ export default function AddCocktailForm({ onCocktailAdded }) {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 mb-8">
+    <div className="bg-white rounded-lg shadow-md p-6 mb-8 text-black">
       <h2 className="text-2xl font-bold mb-4">Ajouter un nouveau cocktail</h2>
       
       <form onSubmit={handleSubmit}>
