@@ -4,19 +4,18 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../../lib/supabaseClient';
 import Link from 'next/link';
-import { use } from 'react';
 
 export default function CocktailDetail({ params }) {
   const router = useRouter();
-  const resolvedParams = use(params);
-  const id = resolvedParams.id;
+  const id = params.id;
 
   const [cocktail, setCocktail] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Vérifier si l'utilisateur est connecté
+    // Check if user is logged in
     const getUser = async () => {
       const { data } = await supabase.auth.getUser();
       setUser(data.user);
@@ -34,19 +33,20 @@ export default function CocktailDetail({ params }) {
   async function fetchCocktail() {
     try {
       setLoading(true);
+      setError(null);
 
-      const { data, error } = await supabase
-        .from('cocktails')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (error) throw error;
-
+      const response = await fetch(`/api/cocktails/${id}`);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch cocktail');
+      }
+      
+      const data = await response.json();
       setCocktail(data);
     } catch (error) {
-      console.error('Erreur lors du chargement du cocktail:', error.message);
-      alert('Erreur lors du chargement du cocktail');
+      console.error('Error loading cocktail:', error.message);
+      setError('Unable to load cocktail details. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -58,22 +58,28 @@ export default function CocktailDetail({ params }) {
     }
 
     try {
-      const { error } = await supabase
-        .from('cocktails')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
-      router.replace('/');  // Changed from push to replace
+      const response = await fetch(`/api/cocktails/${id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete cocktail');
+      }
+      
+      router.replace('/');
     } catch (error) {
-      console.error('Erreur lors de la suppression du cocktail:', error.message);
-      alert('Erreur lors de la suppression du cocktail');
+      console.error('Error deleting cocktail:', error.message);
+      alert('Erreur lors de la suppression du cocktail: ' + error.message);
     }
   }
 
   if (loading) {
     return <div className="text-center p-12">Chargement du cocktail...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center p-12 text-red-600">{error}</div>;
   }
 
   if (!cocktail) {

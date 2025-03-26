@@ -1,12 +1,12 @@
 "use client"
 
 import { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabaseClient';
 import Link from 'next/link';
 
 export default function CocktailList() {
   const [cocktails, setCocktails] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchCocktails();
@@ -15,18 +15,20 @@ export default function CocktailList() {
   async function fetchCocktails() {
     try {
       setLoading(true);
+      setError(null);
       
-      const { data, error } = await supabase
-        .from('cocktails')
-        .select('*')
-        .order('name');
-        
-      if (error) throw error;
+      const response = await fetch('/api/cocktails');
       
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to fetch cocktails');
+      }
+      
+      const data = await response.json();
       setCocktails(data || []);
     } catch (error) {
-      console.error('Erreur lors du chargement des cocktails:', error.message);
-      alert('Erreur lors du chargement des cocktails');
+      console.error('Error loading cocktails:', error.message);
+      setError('Unable to load cocktails. Please try again later.');
     } finally {
       setLoading(false);
     }
@@ -34,6 +36,10 @@ export default function CocktailList() {
 
   if (loading) {
     return <div className="text-center p-4">Chargement des cocktails...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center p-4 text-red-600">{error}</div>;
   }
 
   return (

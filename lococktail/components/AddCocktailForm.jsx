@@ -1,10 +1,10 @@
 "use client"
 
 import { useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
 
 export default function AddCocktailForm({ onCocktailAdded }) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
@@ -14,13 +14,16 @@ export default function AddCocktailForm({ onCocktailAdded }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Validation de base
+    // Reset error state
+    setError(null);
+    
+    // Basic validation
     if (!name || !price) {
-      alert('Le nom et le prix sont obligatoires');
+      setError('Le nom et le prix sont obligatoires');
       return;
     }
     
-    // Convertir la string d'ingrédients en tableau
+    // Convert ingredients string to array
     const ingredients = ingredientsInput
       .split(',')
       .map(ingredient => ingredient.trim())
@@ -29,29 +32,28 @@ export default function AddCocktailForm({ onCocktailAdded }) {
     try {
       setLoading(true);
       
-      // Récupérer l'utilisateur actuel
-      const { data: { user } } = await supabase.auth.getUser();
+      const response = await fetch('/api/cocktails', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name,
+          description,
+          ingredients,
+          price: parseFloat(price),
+          image_url: imageUrl,
+        }),
+      });
       
-      if (!user) throw new Error('Vous devez être connecté pour ajouter un cocktail');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to add cocktail');
+      }
       
-      // Ajouter le cocktail
-      const { data, error } = await supabase
-        .from('cocktails')
-        .insert([
-          {
-            name,
-            description,
-            ingredients,
-            price: parseFloat(price),
-            image_url: imageUrl,
-            user_id: user.id
-          }
-        ])
-        .select();
+      const data = await response.json();
       
-      if (error) throw error;
-      
-      // Réinitialiser le formulaire et notifier le parent
+      // Reset form and notify parent
       setName('');
       setDescription('');
       setPrice('');
@@ -59,13 +61,13 @@ export default function AddCocktailForm({ onCocktailAdded }) {
       setImageUrl('');
       
       if (onCocktailAdded) {
-        onCocktailAdded(data[0]);
+        onCocktailAdded(data);
       }
       
       alert('Cocktail ajouté avec succès!');
     } catch (error) {
-      console.error('Erreur lors de l\'ajout du cocktail:', error.message);
-      alert(`Erreur: ${error.message}`);
+      console.error('Error adding cocktail:', error.message);
+      setError(error.message || 'Une erreur est survenue lors de l\'ajout du cocktail');
     } finally {
       setLoading(false);
     }
@@ -74,6 +76,12 @@ export default function AddCocktailForm({ onCocktailAdded }) {
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-8 text-black">
       <h2 className="text-2xl font-bold mb-4">Ajouter un nouveau cocktail</h2>
+      
+      {error && (
+        <div className="p-3 bg-red-100 text-red-700 rounded mb-4">
+          {error}
+        </div>
+      )}
       
       <form onSubmit={handleSubmit}>
         <div className="mb-4">
@@ -150,7 +158,7 @@ export default function AddCocktailForm({ onCocktailAdded }) {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-green-600 text-white p-2 rounded hover:bg-green-700"
+          className="w-full bg-green-600 text-white p-2 rounded hover:bg-green-700 disabled:bg-green-300"
         >
           {loading ? 'Ajout en cours...' : 'Ajouter le cocktail'}
         </button>
