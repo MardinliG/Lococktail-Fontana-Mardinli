@@ -45,15 +45,21 @@ export default function Home() {
           <h1 className="text-3xl font-bold text-gray-900">Cocktails App</h1>
           <div>
             {user ? (
-              <div className="flex items-center space-x-4 text-black">
-                <span>{user.email}</span>
-                <button 
-                  onClick={handleSignOut}
-                  className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-                >
-                  Déconnexion
-                </button>
-              </div>
+               <div className="flex items-center space-x-4 text-black">
+               <span>{user.email}</span>
+               <Link 
+                 href="/favorites" 
+                 className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+               >
+                 Mes Favoris
+               </Link>
+               <button 
+                 onClick={handleSignOut}
+                 className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+               >
+                 Déconnexion
+               </button>
+             </div>
             ) : (
               <Link href="/login" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
                 Connexion / Inscription
